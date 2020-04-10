@@ -1,0 +1,48 @@
+name:                kaleidoscope-haskell
+version:             0.1.0.0
+github:              "ncihnegn/kaleidoscope-haskell"
+license:             BSD3
+author:              "ncihnegn"
+maintainer:          "ncihnegn@users.noreply.github.com"
+copyright:           "2020 ncihnegn"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/ncihnegn/kaleidoscope-haskell#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+
+executables:
+  kaleidoscope-haskell-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - kaleidoscope-haskell
+
+tests:
+  kaleidoscope-haskell-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - kaleidoscope-haskell
