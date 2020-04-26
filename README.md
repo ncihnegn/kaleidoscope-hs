@@ -1,1 +1,1 @@
-# kaleidoscope-haskell
+# kaleidoscope-hs

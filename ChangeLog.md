@@ -1,3 +1,3 @@
-# Changelog for kaleidoscope-haskell
+# Changelog for kaleidoscope-hs
 
 ## Unreleased changes
