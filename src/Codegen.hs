@@ -17,11 +17,13 @@ import LLVM.AST
     moduleName,
     noFastMathFlags,
   )
+import LLVM.AST.AddrSpace (AddrSpace(AddrSpace))
 import LLVM.AST.Attribute (ParameterAttribute)
 import LLVM.AST.CallingConvention (CallingConvention (C))
 import LLVM.AST.Constant (Constant, Constant (GlobalReference))
 import LLVM.AST.Global
   ( BasicBlock (BasicBlock),
+    Global(Function),
     Parameter (Parameter),
     basicBlocks,
     linkage,
@@ -51,7 +53,13 @@ import LLVM.AST.Type
     Type (FloatingPointType, FunctionType, PointerType),
     ptr,
     void,
+    pointerReferent,
+    argumentTypes,
+    isVarArg,
+    pointerAddrSpace,
+    resultType
   )
+import LLVM.AST.Typed (typeOf)
 
 double :: Type
 double = FloatingPointType DoubleFP
@@ -182,11 +190,18 @@ local :: Name -> Operand
 local = LocalReference double
 
 --TODO: support functions with parameters
-externf :: Name -> Operand
-externf = ConstantOperand . GlobalReference (funty [])
+externf :: Type -> Name -> Operand
+externf ty name = ConstantOperand $ GlobalReference ty name
 
-funty :: [Type] -> Type
-funty argtys = ptr $ FunctionType double argtys False
+lookupFnType :: [Definition] -> Name -> Type
+lookupFnType defs nm =
+  case fnDefByName of
+    [] -> error $ "Undefined function: " ++ show nm
+    [fn] -> PointerType (typeOf fn) (AddrSpace 0)
+    _ -> error $ "Ambiguous function name: " ++ show nm
+  where
+    globalDefs = [g | GlobalDefinition g <- defs]
+    fnDefByName = [f | f@(Function {name = nm'}) <- globalDefs, nm' == nm]
 
 assign :: String -> Operand -> Codegen ()
 assign var x = do

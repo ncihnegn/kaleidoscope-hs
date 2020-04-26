@@ -25,7 +25,6 @@ dependencies:
 - containers
 - haskeline
 - llvm-hs
-- llvm-hs-pretty
 - llvm-hs-pure
 - mtl
 - parsec
