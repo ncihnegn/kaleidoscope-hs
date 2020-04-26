@@ -21,9 +21,16 @@ description:         Please see the README on GitHub at <https://github.com/ncih
 
 dependencies:
 - base >= 4.7 && < 5
+- bytestring
+- containers
 - haskeline
+- llvm-hs
+- llvm-hs-pretty
+- llvm-hs-pure
 - mtl
 - parsec
+- text
+- utf8-string
 
 library:
   source-dirs: src

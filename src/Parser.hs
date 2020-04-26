@@ -2,19 +2,19 @@ module Parser where
 
 import Lexer
 import Syntax
-import Text.Parsec
-import qualified Text.Parsec.Expr as Ex
+import Text.Parsec ((<|>), ParseError, eof, many, parse, try)
+import Text.Parsec.Expr (Assoc (AssocLeft), Operator (Infix), buildExpressionParser)
 import Text.Parsec.String (Parser)
-import qualified Text.Parsec.Token as Tok
+import Text.Parsec.Token (whiteSpace)
 
-binary s f assoc = Ex.Infix (reservedOp s >> return (BinOp f)) assoc
+binary s assoc = Infix (reservedOp s >> return (BinaryOp s)) assoc
 
-table =
-  [ [ binary "*" Times Ex.AssocLeft,
-      binary "/" Divide Ex.AssocLeft
+binops =
+  [ [ binary "*" AssocLeft,
+      binary "/" AssocLeft
     ],
-    [ binary "+" Plus Ex.AssocLeft,
-      binary "-" Minus Ex.AssocLeft
+    [ binary "+" AssocLeft,
+      binary "-" AssocLeft
     ]
   ]
 
@@ -24,23 +24,19 @@ int = do
   return $ Float (fromInteger n)
 
 floating :: Parser Expr
-floating = do
-  n <- float
-  return $ Float n
+floating = Float <$> float
 
 expr :: Parser Expr
-expr = Ex.buildExpressionParser table factor
+expr = buildExpressionParser binops factor
 
 variable :: Parser Expr
-variable = do
-  var <- identifier
-  return $ Var var
+variable = Var <$> identifier
 
 function :: Parser Expr
 function = do
   reserved "def"
   name <- identifier
-  args <- parens $ many variable
+  args <- parens $ many identifier
   body <- expr
   return $ Function name args body
 
@@ -48,7 +44,7 @@ extern :: Parser Expr
 extern = do
   reserved "extern"
   name <- identifier
-  args <- parens $ many variable
+  args <- parens $ many identifier
   return $ Extern name args
 
 call :: Parser Expr
@@ -75,7 +71,7 @@ defn =
 
 contents :: Parser a -> Parser a
 contents p = do
-  Tok.whiteSpace lexer
+  whiteSpace lexer
   r <- p
   eof
   return r

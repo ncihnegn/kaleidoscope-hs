@@ -1,20 +1,13 @@
--- |
 module Syntax where
 
 type Name = String
 
 data Expr
   = Float Double
-  | BinOp Op Expr Expr
   | Var String
+  | UnaryOp Name Expr
+  | BinaryOp Name Expr Expr
+  | Function Name [Name] Expr
   | Call Name [Expr]
-  | Function Name [Expr] Expr
-  | Extern Name [Expr]
-  deriving (Eq, Ord, Show)
-
-data Op
-  = Plus
-  | Minus
-  | Times
-  | Divide
+  | Extern Name [Name]
   deriving (Eq, Ord, Show)
