@@ -17,6 +17,7 @@ import LLVM.Context (withContext)
 import LLVM.Module (moduleLLVMAssembly, withModuleFromAST)
 --import LLVM.Pretty (ppllvm)
 import Syntax
+import JIT
 
 toSig :: [String] -> [(Type, Name.Name)]
 toSig = map (\x -> (double, Name.mkName x))
@@ -88,6 +89,7 @@ cgen defs (Syntax.Call fn args) = do
 codegen :: Module -> [Expr] -> IO Module
 codegen mod fns =
   withContext $ \context -> do
+    runJIT newast
     putStrLn $ show newast
     --TIO.putStrLn $ ppllvm newast
     llstr <- withModuleFromAST context newast moduleLLVMAssembly
