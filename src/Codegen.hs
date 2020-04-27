@@ -21,7 +21,7 @@ import LLVM.AST.AddrSpace (AddrSpace (AddrSpace))
 import LLVM.AST.Attribute (ParameterAttribute)
 import LLVM.AST.CallingConvention (CallingConvention (C))
 import LLVM.AST.Constant (Constant, Constant (GlobalReference))
-import LLVM.AST.FloatingPointPredicate (FloatingPointPredicate(ULT))
+import LLVM.AST.FloatingPointPredicate (FloatingPointPredicate (ULT))
 import LLVM.AST.Global
   ( BasicBlock (BasicBlock),
     Global (Function),
@@ -37,12 +37,13 @@ import LLVM.AST.Instruction
       ( Alloca,
         Call,
         FAdd,
+        FCmp,
         FDiv,
         FMul,
         FSub,
-        FCmp,
         Load,
-        Store, UIToFP
+        Store,
+        UIToFP
       ),
     Named ((:=), Do),
     Terminator (Br, CondBr, Ret),
