@@ -7,33 +7,29 @@ import Control.Monad.State (gets)
 import Data.ByteString.UTF8 (toString)
 --import qualified Data.Text.Lazy.IO as TIO
 import qualified Data.Map as Map
+--import LLVM.Pretty (ppllvm)
+
+import JIT
 import LLVM.AST (Definition, Module, moduleDefinitions)
-import qualified LLVM.AST.Name as Name
-import LLVM.AST.Operand (Operand(ConstantOperand))
-import LLVM.AST.Type (Type)
 import qualified LLVM.AST.Constant as Constant
 import LLVM.AST.Float (SomeFloat (Double))
+import qualified LLVM.AST.Name as Name
+import LLVM.AST.Operand (Operand (ConstantOperand))
+import LLVM.AST.Type (Type)
 import LLVM.Context (withContext)
 import LLVM.Module (moduleLLVMAssembly, withModuleFromAST)
---import LLVM.Pretty (ppllvm)
 import Syntax
-import JIT
 
 toSig :: [String] -> [(Type, Name.Name)]
 toSig = map (\x -> (double, Name.mkName x))
-
--- lt :: Operand -> Operand -> Codegen AST.Operand
--- lt a b = do
---   test <- fcmp ULT a b
---   uitofp double test
 
 binops =
   Map.fromList
     [ ("+", fadd),
       ("-", fsub),
       ("*", fmul),
-      ("/", fdiv)
-      --  ("<", lt)
+      ("/", fdiv),
+      ("<", lt)
     ]
 
 codegenTop :: Expr -> LLVM ()
@@ -89,12 +85,12 @@ cgen defs (Syntax.Call fn args) = do
 codegen :: Module -> [Expr] -> IO Module
 codegen mod fns =
   withContext $ \context -> do
-    runJIT newast
-    putStrLn $ show newast
+    putStrLn $ show oldast
+    newast <- runJIT oldast
     --TIO.putStrLn $ ppllvm newast
     llstr <- withModuleFromAST context newast moduleLLVMAssembly
     putStrLn $ toString llstr
     return newast
   where
     modn = mapM codegenTop fns
-    newast = runLLVM mod modn
+    oldast = runLLVM mod modn

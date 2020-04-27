@@ -17,13 +17,14 @@ import LLVM.AST
     moduleName,
     noFastMathFlags,
   )
-import LLVM.AST.AddrSpace (AddrSpace(AddrSpace))
+import LLVM.AST.AddrSpace (AddrSpace (AddrSpace))
 import LLVM.AST.Attribute (ParameterAttribute)
 import LLVM.AST.CallingConvention (CallingConvention (C))
 import LLVM.AST.Constant (Constant, Constant (GlobalReference))
+import LLVM.AST.FloatingPointPredicate (FloatingPointPredicate(ULT))
 import LLVM.AST.Global
   ( BasicBlock (BasicBlock),
-    Global(Function),
+    Global (Function),
     Parameter (Parameter),
     basicBlocks,
     linkage,
@@ -39,8 +40,9 @@ import LLVM.AST.Instruction
         FDiv,
         FMul,
         FSub,
+        FCmp,
         Load,
-        Store
+        Store, UIToFP
       ),
     Named ((:=), Do),
     Terminator (Br, CondBr, Ret),
@@ -51,13 +53,6 @@ import LLVM.AST.Operand (Operand (ConstantOperand, LocalReference))
 import LLVM.AST.Type
   ( FloatingPointType (DoubleFP),
     Type (FloatingPointType, FunctionType, PointerType),
-    ptr,
-    void,
-    pointerReferent,
-    argumentTypes,
-    isVarArg,
-    pointerAddrSpace,
-    resultType
   )
 import LLVM.AST.Typed (typeOf)
 
@@ -236,6 +231,11 @@ terminator trm = do
   modifyBlock (blk {term = Just trm})
   return trm
 
+lt :: Operand -> Operand -> Codegen Operand
+lt a b = do
+  test <- fcmp ULT a b
+  uitofp test
+
 fadd :: Operand -> Operand -> Codegen Operand
 fadd a b = instr $ FAdd noFastMathFlags a b []
 
@@ -247,6 +247,12 @@ fmul a b = instr $ FMul noFastMathFlags a b []
 
 fdiv :: Operand -> Operand -> Codegen Operand
 fdiv a b = instr $ FDiv noFastMathFlags a b []
+
+fcmp :: FloatingPointPredicate -> Operand -> Operand -> Codegen Operand
+fcmp cond a b = instr $ FCmp cond a b []
+
+uitofp :: Operand -> Codegen Operand
+uitofp a = instr $ UIToFP a double []
 
 br :: Name -> Codegen (Named Terminator)
 br val = terminator $ Do $ Br val []
