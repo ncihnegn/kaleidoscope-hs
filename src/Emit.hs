@@ -1,8 +1,7 @@
 module Emit where
 
 import Codegen
-import Control.Monad (forM)
-import Control.Monad.Except (runExceptT)
+import Control.Monad (forM_)
 import Control.Monad.State (gets)
 import Data.ByteString.UTF8 (toString)
 --import qualified Data.Text.Lazy.IO as TIO
@@ -36,9 +35,9 @@ codegenTop :: Expr -> LLVM ()
 codegenTop (Syntax.Function name args body) = do
   defs <- gets moduleDefinitions
   let bls = createBlocks $ execCodegen $ do
-        entry <- addBlock entryBlockName
-        setBlock entry
-        forM args $ \a -> do
+        b <- addBlock entryBlockName
+        _ <- setBlock b
+        forM_ args $ \a -> do
           var <- alloca double
           store var $ local $ Name.mkName a
           assign a var
@@ -46,27 +45,27 @@ codegenTop (Syntax.Function name args body) = do
   define double name fnargs bls
   where
     fnargs = toSig args
-codegenTop (Extern name args) = do
+codegenTop (Extern name args) =
   external double name fnargs
   where
     fnargs = toSig args
-codegenTop exp = do
+codegenTop expr = do
   defs <- gets moduleDefinitions
   let blks = createBlocks $ execCodegen $ do
-        entry <- addBlock entryBlockName
-        setBlock entry
-        cgen defs exp >>= ret
+        b <- addBlock entryBlockName
+        _ <- setBlock b
+        cgen defs expr >>= ret
   define double "main" [] blks
 
 cgen :: [Definition] -> Expr -> Codegen Operand
-cgen defs (UnaryOp op a) = do
+cgen defs (UnaryOp op a) =
   cgen defs $ Syntax.Call ("unary" ++ op) [a]
 cgen defs (BinaryOp "=" (Var var) val) = do
   a <- getvar var
   cval <- cgen defs val
   store a cval
   return cval
-cgen defs (BinaryOp op a b) = do
+cgen defs (BinaryOp op a b) =
   case Map.lookup op binops of
     Just f -> do
       ca <- cgen defs a
@@ -83,9 +82,9 @@ cgen defs (Syntax.Call fn args) = do
     fnType = lookupFnType defs fnName
 
 codegen :: Module -> [Expr] -> IO Module
-codegen mod fns =
+codegen m fns =
   withContext $ \context -> do
-    putStrLn $ show oldast
+    print oldast
     newast <- runJIT oldast
     --TIO.putStrLn $ ppllvm newast
     llstr <- withModuleFromAST context newast moduleLLVMAssembly
@@ -93,4 +92,4 @@ codegen mod fns =
     return newast
   where
     modn = mapM codegenTop fns
-    oldast = runLLVM mod modn
+    oldast = runLLVM m modn

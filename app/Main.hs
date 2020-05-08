@@ -10,7 +10,7 @@ import System.Console.Haskeline
 import System.Environment
 
 initModule :: AST.Module
-initModule = emptyModule "my"
+initModule = emptyModule "Kaleidoscope"
 
 parse :: String -> IO (Maybe [Expr])
 parse source = do

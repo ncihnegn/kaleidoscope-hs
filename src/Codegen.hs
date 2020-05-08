@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
+{-# LANGUAGE TupleSections #-}
 
 module Codegen where
 
@@ -20,7 +21,7 @@ import LLVM.AST
 import LLVM.AST.AddrSpace (AddrSpace (AddrSpace))
 import LLVM.AST.Attribute (ParameterAttribute)
 import LLVM.AST.CallingConvention (CallingConvention (C))
-import LLVM.AST.Constant (Constant, Constant (GlobalReference))
+import LLVM.AST.Constant (Constant (GlobalReference))
 import LLVM.AST.FloatingPointPredicate (FloatingPointPredicate (ULT))
 import LLVM.AST.Global
   ( BasicBlock (BasicBlock),
@@ -49,11 +50,11 @@ import LLVM.AST.Instruction
     Terminator (Br, CondBr, Ret),
   )
 import LLVM.AST.Linkage (Linkage (External))
-import LLVM.AST.Name (Name (Name, UnName), mkName)
+import LLVM.AST.Name (Name (UnName), mkName)
 import LLVM.AST.Operand (Operand (ConstantOperand, LocalReference))
 import LLVM.AST.Type
   ( FloatingPointType (DoubleFP),
-    Type (FloatingPointType, FunctionType, PointerType),
+    Type (FloatingPointType, PointerType),
   )
 import LLVM.AST.Typed (typeOf)
 
@@ -94,7 +95,7 @@ newtype LLVM a = LLVM (State Module a)
   deriving (Functor, Applicative, Monad, MonadState Module)
 
 runLLVM :: Module -> LLVM a -> Module
-runLLVM mod (LLVM m) = execState m mod
+runLLVM m (LLVM mn) = execState mn m
 
 emptyModule :: String -> Module
 emptyModule label = defaultModule {moduleName = toShort $ fromString label}
@@ -153,10 +154,10 @@ getBlock :: Codegen Name
 getBlock = gets currentBlock
 
 makeBlock :: (Name, BlockState) -> BasicBlock
-makeBlock (l, (BlockState _ s t)) = BasicBlock l (reverse s) (maketerm t)
+makeBlock (l, BlockState _ s t) = BasicBlock l (reverse s) (maketerm t)
   where
     maketerm (Just x) = x
-    maketerm Nothing = error $ "Block has no terminator: " ++ (show l)
+    maketerm Nothing = error $ "Block has no terminator: " ++ show l
 
 modifyBlock :: BlockState -> Codegen ()
 modifyBlock new = do
@@ -187,7 +188,7 @@ local = LocalReference double
 
 --TODO: support functions with parameters
 externf :: Type -> Name -> Operand
-externf ty name = ConstantOperand $ GlobalReference ty name
+externf ty n = ConstantOperand $ GlobalReference ty n
 
 lookupFnType :: [Definition] -> Name -> Type
 lookupFnType defs nm =
@@ -197,12 +198,12 @@ lookupFnType defs nm =
     _ -> error $ "Ambiguous function name: " ++ show nm
   where
     globalDefs = [g | GlobalDefinition g <- defs]
-    fnDefByName = [f | f@(Function {name = nm'}) <- globalDefs, nm' == nm]
+    fnDefByName = [f | f@Function {name = nm'} <- globalDefs, nm' == nm]
 
 assign :: String -> Operand -> Codegen ()
 assign var x = do
   lcls <- gets symtab
-  modify $ \s -> s {symtab = [(var, x)] ++ lcls}
+  modify $ \s -> s {symtab = (var, x) : lcls}
 
 getvar :: String -> Codegen Operand
 getvar var = do
@@ -211,7 +212,7 @@ getvar var = do
     Just x -> return x
     Nothing -> error $ "Local variable not in scope: " ++ show var
 
-instr :: Instruction -> Codegen (Operand)
+instr :: Instruction -> Codegen Operand
 instr ins = do
   n <- fresh
   let ref = UnName n
@@ -224,7 +225,7 @@ unnminstr :: Instruction -> Codegen ()
 unnminstr ins = do
   blk <- current
   let i = stack blk
-  modifyBlock (blk {stack = (Do ins) : i})
+  modifyBlock (blk {stack = Do ins : i})
 
 terminator :: Named Terminator -> Codegen (Named Terminator)
 terminator trm = do
@@ -265,7 +266,7 @@ ret :: Operand -> Codegen (Named Terminator)
 ret val = terminator $ Do $ Ret (Just val) []
 
 toArgs :: [Operand] -> [(Operand, [ParameterAttribute])]
-toArgs = map (\x -> (x, []))
+toArgs = map (, [])
 
 call :: Operand -> [Operand] -> Codegen Operand
 call fn args = instr $ Call Nothing C [] (Right fn) (toArgs args) [] []

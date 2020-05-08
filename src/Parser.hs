@@ -7,7 +7,7 @@ import Text.Parsec.Expr (Assoc (AssocLeft), Operator (Infix), buildExpressionPar
 import Text.Parsec.String (Parser)
 import Text.Parsec.Token (whiteSpace)
 
-binary s assoc = Infix (reservedOp s >> return (BinaryOp s)) assoc
+binary s = Infix (reservedOp s >> return (BinaryOp s))
 
 binops =
   [ [ binary "*" AssocLeft,
@@ -19,9 +19,7 @@ binops =
   ]
 
 int :: Parser Expr
-int = do
-  n <- integer
-  return $ Float (fromInteger n)
+int = Float . fromInteger <$> integer
 
 floating :: Parser Expr
 floating = Float <$> float
@@ -37,8 +35,7 @@ function = do
   reserved "def"
   name <- identifier
   args <- parens $ many identifier
-  body <- expr
-  return $ Function name args body
+  Function name args <$> expr
 
 extern :: Parser Expr
 extern = do
@@ -83,7 +80,7 @@ toplevel = many $ do
   return def
 
 parseExpr :: String -> Either ParseError Expr
-parseExpr s = parse (contents expr) "<stdin>" s
+parseExpr = parse (contents expr) "<stdin>"
 
 parseTopLevel :: String -> Either ParseError [Expr]
-parseTopLevel s = parse (contents toplevel) "<stdin>" s
+parseTopLevel = parse (contents toplevel) "<stdin>"
