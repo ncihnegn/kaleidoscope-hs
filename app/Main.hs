@@ -1,13 +1,14 @@
 module Main where
 
 import Codegen
-import Control.Monad.Trans
+import Control.Monad (void)
+import Control.Monad.Trans (liftIO)
 import Emit
 import qualified LLVM.AST as AST
 import Parser
 import Syntax
-import System.Console.Haskeline
-import System.Environment
+import System.Console.Haskeline (defaultSettings, getInputLine, outputStrLn, runInputT)
+import System.Environment (getArgs)
 
 initModule :: AST.Module
 initModule = emptyModule "Kaleidoscope"
@@ -51,4 +52,4 @@ main = do
   args <- getArgs
   case args of
     [] -> repl
-    [fname] -> processFile fname >> return ()
+    [fname] -> void (processFile fname)
