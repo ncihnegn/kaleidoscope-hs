@@ -4,13 +4,13 @@ import Codegen
 import Control.Monad (void)
 import Control.Monad.Trans (liftIO)
 import Emit
-import qualified LLVM.AST as AST
+import LLVM.AST (Module)
 import Parser
 import Syntax
 import System.Console.Haskeline (defaultSettings, getInputLine, outputStrLn, runInputT)
 import System.Environment (getArgs)
 
-initModule :: AST.Module
+initModule :: Module
 initModule = emptyModule "Kaleidoscope"
 
 parse :: String -> IO (Maybe [Expr])
@@ -22,7 +22,7 @@ parse source = do
       print ex
       return $ Just ex
 
-process :: AST.Module -> String -> IO (Maybe AST.Module)
+process :: Module -> String -> IO (Maybe Module)
 process modo source = do
   ex <- liftIO $ parse source
   case ex of
@@ -31,7 +31,7 @@ process modo source = do
       ast <- codegen modo ex
       return $ Just ast
 
-processFile :: String -> IO (Maybe AST.Module)
+processFile :: String -> IO (Maybe Module)
 processFile fname = readFile fname >>= process initModule
 
 repl :: IO ()
