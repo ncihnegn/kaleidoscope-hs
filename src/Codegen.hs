@@ -186,7 +186,6 @@ fresh = do
 local :: Name -> Operand
 local = LocalReference double
 
---TODO: support functions with parameters
 externf :: Type -> Name -> Operand
 externf ty n = ConstantOperand $ GlobalReference ty n
 
