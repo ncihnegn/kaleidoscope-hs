@@ -10,4 +10,5 @@ data Expr
   | Function Name [Name] Expr
   | Call Name [Expr]
   | Extern Name [Name]
+  | If Expr Expr Expr
   deriving (Eq, Ord, Show)

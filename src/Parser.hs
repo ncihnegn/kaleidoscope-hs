@@ -30,6 +30,15 @@ expr = buildExpressionParser binops factor
 variable :: Parser Expr
 variable = Var <$> identifier
 
+ifthen :: Parser Expr
+ifthen = do
+  reserved "if"
+  cond <- expr
+  reserved "then"
+  tr <- expr
+  reserved "else"
+  If cond tr <$> expr
+
 function :: Parser Expr
 function = do
   reserved "def"
@@ -57,7 +66,8 @@ factor =
     <|> try extern
     <|> try function
     <|> try call
-    <|> variable
+    <|> try variable
+    <|> ifthen
     <|> parens expr
 
 defn :: Parser Expr

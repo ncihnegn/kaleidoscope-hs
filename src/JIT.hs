@@ -24,23 +24,22 @@ foreign import ccall "dynamic" haskFun :: FunPtr (IO Double) -> IO Double
 
 runJIT :: Module -> IO Module
 runJIT md =
-  withContext $ \context -> 
-  jit context $ \executionEngine ->
-  withModuleFromAST context md $ \m ->
-    withPassManager passes $ \pm -> do
-      _ <- runPassManager pm m
-      optmod <- moduleAST m
-      s <- moduleLLVMAssembly m
-      putStrLn $ toString s
-
-      withModuleInEngine executionEngine m $ \ee -> do
-        mainfn <- getFunction ee (mkName "main")
-        case mainfn of
-          Just fn -> do
-            res <- run fn
-            putStrLn $ "Evaluated to: " ++ show res
-          Nothing -> return ()
-      return optmod
+  withContext $ \context ->
+    jit context $ \executionEngine ->
+      withModuleFromAST context md $ \m ->
+        withPassManager passes $ \pm -> do
+          _ <- runPassManager pm m
+          optmod <- moduleAST m
+          s <- moduleLLVMAssembly m
+          putStrLn $ toString s
+          withModuleInEngine executionEngine m $ \ee -> do
+            mainfn <- getFunction ee (mkName "main")
+            case mainfn of
+              Just fn -> do
+                res <- run fn
+                putStrLn $ "Evaluated to: " ++ show res
+              Nothing -> return ()
+          return optmod
 
 passes :: PassSetSpec
 passes = defaultCuratedPassSetSpec {optLevel = Just 3}

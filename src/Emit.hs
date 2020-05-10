@@ -12,12 +12,21 @@ import JIT
 import LLVM.AST (Definition, Module, moduleDefinitions)
 import qualified LLVM.AST.Constant as Constant
 import LLVM.AST.Float (SomeFloat (Double))
+import LLVM.AST.FloatingPointPredicate (FloatingPointPredicate (ONE))
 import qualified LLVM.AST.Name as Name
 import LLVM.AST.Operand (Operand (ConstantOperand))
 import LLVM.AST.Type (Type)
 import LLVM.Context (withContext)
 import LLVM.Module (moduleLLVMAssembly, withModuleFromAST)
 import Syntax
+
+one = ConstantOperand $ Constant.Float (Double 1.0)
+
+zero = ConstantOperand $ Constant.Float (Double 0.0)
+
+false = zero
+
+true = one
 
 toSig :: [String] -> [(Type, Name.Name)]
 toSig = map (\x -> (double, Name.mkName x))
@@ -80,6 +89,27 @@ cgen defs (Syntax.Call fn args) = do
   where
     fnName = Name.mkName fn
     fnType = lookupFnType defs fnName
+cgen defs (Syntax.If cond tr fl) = do
+  ifthen <- addBlock "if.then"
+  ifelse <- addBlock "if.else"
+  ifexit <- addBlock "if.exit"
+  -- %entry
+  cond <- cgen defs cond
+  test <- fcmp ONE false cond
+  cbr test ifthen ifelse -- Branch based on the condition
+    -- if.then
+  setBlock ifthen
+  trval <- cgen defs tr -- Generate code for the true branch
+  br ifexit -- Branch to the merge block
+  ifthen <- getBlock
+  -- if.else
+  setBlock ifelse
+  flval <- cgen defs fl -- Generate code for the false branch
+  br ifexit -- Branch to the merge block
+  ifelse <- getBlock
+  -- if.exit
+  setBlock ifexit
+  phi double [(trval, ifthen), (flval, ifelse)]
 
 codegen :: Module -> [Expr] -> IO Module
 codegen m fns =
