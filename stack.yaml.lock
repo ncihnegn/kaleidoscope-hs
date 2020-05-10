@@ -3,10 +3,42 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    subdir: llvm-hs
+    cabal-file:
+      size: 8733
+      sha256: 3315a9007ea5bc963713a3fe67dae692eb5ae2cf9ec6eb5728c4c3d60f3bae6f
+    name: llvm-hs
+    version: 9.0.1
+    git: https://github.com/llvm-hs/llvm-hs.git
+    pantry-tree:
+      size: 13797
+      sha256: ab7b4e7702382b837d4af88a86928e0d7d1a1f135c0756d2d028ac6c3e7c6ed7
+    commit: 4eb579a4cfc1e413dbc2eb232df07bf7e0126f77
+  original:
+    subdir: llvm-hs
+    git: https://github.com/llvm-hs/llvm-hs.git
+    commit: 4eb579a4cfc1e413dbc2eb232df07bf7e0126f77
+- completed:
+    subdir: llvm-hs-pure
+    cabal-file:
+      size: 2945
+      sha256: 134779f40086a366279f678e670b610d7a7618b28dd43f65894078fd20e04629
+    name: llvm-hs-pure
+    version: 9.0.0
+    git: https://github.com/llvm-hs/llvm-hs.git
+    pantry-tree:
+      size: 2651
+      sha256: 98058b0ee19ba26f56b3f77b871aa6f13e44a8a0f0fe95c139db672757e0c8ec
+    commit: 4eb579a4cfc1e413dbc2eb232df07bf7e0126f77
+  original:
+    subdir: llvm-hs-pure
+    git: https://github.com/llvm-hs/llvm-hs.git
+    commit: 4eb579a4cfc1e413dbc2eb232df07bf7e0126f77
 snapshots:
 - completed:
-    size: 492027
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/9.yaml
-    sha256: 11394dc975e96c2fea90f7f2b3229630d46351a092ebcec78f0a56403930b429
-  original: lts-15.9
+    size: 494638
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/11.yaml
+    sha256: 5747328cdcbb8fe9c96fc048b5566167c80dd176a41b52d3b363058e3cc1dc5d
+  original: lts-15.11
