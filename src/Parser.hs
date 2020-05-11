@@ -15,7 +15,8 @@ binops =
     ],
     [ binary "+" AssocLeft,
       binary "-" AssocLeft
-    ]
+    ],
+    [binary "<" AssocLeft]
   ]
 
 int :: Parser Expr
@@ -38,6 +39,20 @@ ifthen = do
   tr <- expr
   reserved "else"
   If cond tr <$> expr
+
+for :: Parser Expr
+for = do
+  reserved "for"
+  var <- identifier
+  reservedOp "="
+  start <- expr
+  reservedOp ","
+  cond <- expr
+  reservedOp ","
+  step <- expr
+  reserved "in"
+  body <- expr
+  return $ For var start cond step body
 
 function :: Parser Expr
 function = do
@@ -68,6 +83,7 @@ factor =
     <|> try call
     <|> try variable
     <|> ifthen
+    <|> for
     <|> parens expr
 
 defn :: Parser Expr

@@ -11,4 +11,5 @@ data Expr
   | Call Name [Expr]
   | Extern Name [Name]
   | If Expr Expr Expr
+  | For Name Expr Expr Expr Expr
   deriving (Eq, Ord, Show)

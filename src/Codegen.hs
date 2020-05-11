@@ -72,23 +72,21 @@ uniqueName nm ns =
     Nothing -> (nm, Map.insert nm 1 ns)
     Just ix -> (nm ++ show ix, Map.insert nm (ix + 1) ns)
 
-data BlockState
-  = BlockState
-      { idx :: Int, -- Block index
-        stack :: [Named Instruction], -- Stack of instructions
-        term :: Maybe (Named Terminator) -- Block terminator
-      }
+data BlockState = BlockState
+  { idx :: Int, -- Block index
+    stack :: [Named Instruction], -- Stack of instructions
+    term :: Maybe (Named Terminator) -- Block terminator
+  }
   deriving (Show)
 
-data CodegenState
-  = CodegenState
-      { currentBlock :: Name, -- Name of the active block to append to
-        blocks :: Map.Map Name BlockState, -- Blocks for function
-        symtab :: SymbolTable, -- Function scope symbol table
-        blockCount :: Int, -- Count of basic blocks
-        count :: Word, -- Count of unamed instructions
-        names :: Names -- Name supply
-      }
+data CodegenState = CodegenState
+  { currentBlock :: Name, -- Name of the active block to append to
+    blocks :: Map.Map Name BlockState, -- Blocks for function
+    symtab :: SymbolTable, -- Function scope symbol table
+    blockCount :: Int, -- Count of basic blocks
+    count :: Word, -- Count of unamed instructions
+    names :: Names -- Name supply
+  }
   deriving (Show)
 
 newtype Codegen a = Codegen {runCodegen :: State CodegenState a}
