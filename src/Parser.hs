@@ -51,8 +51,7 @@ for = do
   reservedOp ","
   step <- expr
   reserved "in"
-  body <- expr
-  return $ For var start cond step body
+  For var start cond step <$> expr
 
 function :: Parser Expr
 function = do
