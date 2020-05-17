@@ -190,16 +190,6 @@ local = LocalReference double
 externf :: Type -> Name -> Operand
 externf ty n = ConstantOperand $ GlobalReference ty n
 
-lookupFnType :: [Definition] -> Name -> Type
-lookupFnType defs nm =
-  case fnDefByName of
-    [] -> error $ "Undefined function: " ++ show nm
-    [fn] -> PointerType (typeOf fn) (AddrSpace 0)
-    _ -> error $ "Ambiguous function name: " ++ show nm
-  where
-    globalDefs = [g | GlobalDefinition g <- defs]
-    fnDefByName = [f | f@Function {name = nm'} <- globalDefs, nm' == nm]
-
 assign :: String -> Operand -> Codegen ()
 assign var x = do
   lcls <- gets symtab
