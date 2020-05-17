@@ -4,8 +4,9 @@ import Lexer
 import Syntax
 import Text.Parsec ((<|>), ParseError, eof, many, parse, try)
 import Text.Parsec.Expr (Assoc (AssocLeft), Operator (Infix), buildExpressionParser)
+import Text.Parsec.Language (emptyDef)
 import Text.Parsec.String (Parser)
-import Text.Parsec.Token (whiteSpace)
+import Text.Parsec.Token (opStart, opLetter, whiteSpace)
 
 binary s = Infix (reservedOp s >> return (BinaryOp s))
 
@@ -26,7 +27,16 @@ floating :: Parser Expr
 floating = Float <$> float
 
 expr :: Parser Expr
-expr = buildExpressionParser binops factor
+expr = buildExpressionParser (binops ++ [[binop]]) factor
+
+binarydef :: Parser Expr
+binarydef = do
+  reserved "def"
+  reserved "binary"
+  o <- op
+  prec <- int
+  args <- parens $ many identifier
+  BinaryDef o args <$> expr
 
 variable :: Parser Expr
 variable = Var <$> identifier
@@ -73,12 +83,25 @@ call = do
   args <- parens $ commaSep expr
   return $ Call name args
 
+operator :: Parser String
+operator = do
+  c <- opStart emptyDef
+  cs <- many $ opLetter emptyDef
+  return (c:cs)
+
+op :: Parser String
+op = do
+  whitespace
+  o <- operator
+  whitespace
+  return o
+
+binop = Infix (BinaryOp <$> op) AssocLeft
+
 factor :: Parser Expr
 factor =
   try floating
     <|> try int
-    <|> try extern
-    <|> try function
     <|> try call
     <|> try variable
     <|> ifthen
@@ -89,6 +112,7 @@ defn :: Parser Expr
 defn =
   try extern
     <|> try function
+    <|> try binarydef
     <|> expr
 
 contents :: Parser a -> Parser a

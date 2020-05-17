@@ -58,6 +58,8 @@ codegenTop (Extern name args) =
   external double name fnargs
   where
     fnargs = toSig args
+codegenTop (BinaryDef name args body) =
+  codegenTop $ Function ("binary" ++ name) args body
 codegenTop expr = do
   defs <- gets moduleDefinitions
   let blks = createBlocks $ execCodegen $ do
@@ -80,7 +82,7 @@ cgen defs (BinaryOp op a b) =
       ca <- cgen defs a
       cb <- cgen defs b
       f ca cb
-    Nothing -> error "No such operator"
+    Nothing -> cgen defs (Call ("binary" ++ op) [a,b])
 cgen _ (Var x) = getvar x >>= load
 cgen _ (Float n) = return $ ConstantOperand $ Constant.Float (Double n)
 cgen defs (Syntax.Call fn args) = do

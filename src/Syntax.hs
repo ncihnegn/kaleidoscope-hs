@@ -7,6 +7,8 @@ data Expr
   | Var String
   | UnaryOp Name Expr
   | BinaryOp Name Expr Expr
+--  | UnaryDef Name [Name] Expr
+  | BinaryDef Name [Name] Expr
   | Function Name [Name] Expr
   | Call Name [Expr]
   | Extern Name [Name]
