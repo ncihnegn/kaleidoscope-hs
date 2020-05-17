@@ -58,6 +58,8 @@ codegenTop (Extern name args) =
   external double name fnargs
   where
     fnargs = toSig args
+codegenTop (UnaryDef name args body) =
+  codegenTop $ Function ("unary" ++ name) args body
 codegenTop (BinaryDef name args body) =
   codegenTop $ Function ("binary" ++ name) args body
 codegenTop expr = do

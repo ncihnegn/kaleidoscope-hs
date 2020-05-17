@@ -3,10 +3,10 @@ module Parser where
 import Lexer
 import Syntax
 import Text.Parsec ((<|>), ParseError, eof, many, parse, try)
-import Text.Parsec.Expr (Assoc (AssocLeft), Operator (Infix), buildExpressionParser)
+import Text.Parsec.Expr (Assoc (AssocLeft), Operator (Infix, Prefix), buildExpressionParser)
 import Text.Parsec.Language (emptyDef)
 import Text.Parsec.String (Parser)
-import Text.Parsec.Token (opStart, opLetter, whiteSpace)
+import Text.Parsec.Token (opLetter, opStart, whiteSpace)
 
 binary s = Infix (reservedOp s >> return (BinaryOp s))
 
@@ -27,7 +27,7 @@ floating :: Parser Expr
 floating = Float <$> float
 
 expr :: Parser Expr
-expr = buildExpressionParser (binops ++ [[binop]]) factor
+expr = buildExpressionParser (binops ++ [[unop], [binop]]) factor
 
 binarydef :: Parser Expr
 binarydef = do
@@ -37,6 +37,14 @@ binarydef = do
   prec <- int
   args <- parens $ many identifier
   BinaryDef o args <$> expr
+
+unarydef :: Parser Expr
+unarydef = do
+  reserved "def"
+  reserved "unary"
+  o <- op
+  args <- parens $ many identifier
+  UnaryDef o args <$> expr
 
 variable :: Parser Expr
 variable = Var <$> identifier
@@ -87,7 +95,7 @@ operator :: Parser String
 operator = do
   c <- opStart emptyDef
   cs <- many $ opLetter emptyDef
-  return (c:cs)
+  return (c : cs)
 
 op :: Parser String
 op = do
@@ -95,6 +103,8 @@ op = do
   o <- operator
   whitespace
   return o
+
+unop = Prefix (UnaryOp <$> op)
 
 binop = Infix (BinaryOp <$> op) AssocLeft
 
@@ -112,6 +122,7 @@ defn :: Parser Expr
 defn =
   try extern
     <|> try function
+    <|> try unarydef
     <|> try binarydef
     <|> expr
 
