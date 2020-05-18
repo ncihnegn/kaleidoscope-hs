@@ -43,7 +43,7 @@ binops =
     ]
 
 codegenTop :: Expr -> LLVM ()
-codegenTop (Syntax.Function name args body) = do
+codegenTop (Function name args body) = do
   let bls = createBlocks $ execCodegen $ do
         b <- addBlock entryBlockName
         _ <- setBlock b
@@ -72,7 +72,7 @@ codegenTop expr = do
 
 cgen :: Expr -> Codegen Operand
 cgen (UnaryOp op a) =
-  cgen $ Syntax.Call ("unary" ++ op) [a]
+  cgen $ Call ("unary" ++ op) [a]
 cgen (BinaryOp "=" (Var var) val) = do
   a <- getvar var
   cval <- cgen val
@@ -87,13 +87,13 @@ cgen (BinaryOp op a b) =
     Nothing -> cgen (Call ("binary" ++ op) [a, b])
 cgen (Var x) = getvar x >>= load
 cgen (Float n) = return $ ConstantOperand $ Constant.Float (Double n)
-cgen (Syntax.Call fn args) = do
+cgen (Call fn args) = do
   largs <- mapM cgen args
   call (externf fnType fnName) largs
   where
     fnName = Name.mkName fn
     fnType = PointerType (FunctionType double (replicate (length args) double) False) (AddrSpace 0) --lookupFnType defs fnName
-cgen (Syntax.If cond tr fl) = do
+cgen (If cond tr fl) = do
   ifthen <- addBlock "if.then"
   ifelse <- addBlock "if.else"
   ifexit <- addBlock "if.exit"
@@ -114,7 +114,7 @@ cgen (Syntax.If cond tr fl) = do
   -- if.exit
   setBlock ifexit
   phi double [(trval, ifthen), (flval, ifelse)]
-cgen (Syntax.For ivar start cond step body) = do
+cgen (For ivar start cond step body) = do
   forloop <- addBlock "for.loop"
   forexit <- addBlock "for.exit"
   -- %entry
