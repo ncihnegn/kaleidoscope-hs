@@ -22,9 +22,9 @@ import LLVM.Context (withContext)
 import LLVM.Module (moduleLLVMAssembly, withModuleFromAST)
 import Syntax
 
-one = ConstantOperand $ Constant.Float (Double 1.0)
+one = ConstantOperand . Constant.Float $ Double 1.0
 
-zero = ConstantOperand $ Constant.Float (Double 0.0)
+zero = ConstantOperand . Constant.Float $ Double 0.0
 
 false = zero
 
@@ -136,6 +136,12 @@ cgen (For ivar start cond step body) = do
     -- for.exit
   setBlock forexit
   return zero
+cgen (Let a b c) = do
+  i <- alloca double
+  val <- cgen b
+  store i val
+  assign a i
+  cgen c
 
 codegen :: Module -> [Expr] -> IO Module
 codegen m fns =

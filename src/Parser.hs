@@ -11,7 +11,8 @@ import Text.Parsec.Token (opLetter, opStart, whiteSpace)
 binary s = Infix (reservedOp s >> return (BinaryOp s))
 
 binops =
-  [ [ binary "*" AssocLeft,
+  [ [binary "=" AssocLeft],
+     [ binary "*" AssocLeft,
       binary "/" AssocLeft
     ],
     [ binary "+" AssocLeft,
@@ -108,6 +109,18 @@ unop = Prefix (UnaryOp <$> op)
 
 binop = Infix (BinaryOp <$> op) AssocLeft
 
+letins :: Parser Expr
+letins = do
+  reserved "var"
+  defs <- commaSep $ do
+    var <- identifier
+    reservedOp "="
+    val <- expr
+    return (var, val)
+  reserved "in"
+  body <- expr
+  return $ foldr (uncurry Let) body defs
+
 factor :: Parser Expr
 factor =
   try floating
@@ -115,6 +128,7 @@ factor =
     <|> try call
     <|> try variable
     <|> ifthen
+    <|> try letins
     <|> for
     <|> parens expr
 
